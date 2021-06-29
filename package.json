@@ -1,0 +1,23 @@
+{
+  "name": "nodle-rosetta-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "run:server": "npm exec -- ts-node -r ./src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ConsiderItDone/nodle-rosetta-server.git"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ConsiderItDone/nodle-rosetta-server/issues"
+  },
+  "homepage": "https://github.com/ConsiderItDone/nodle-rosetta-server#readme",
+  "dependencies": {
+    "babel": "^6.23.0",
+    "rosetta-typescript-sdk": "github:ConsiderItDone/rosetta-typescript-sdk",
+    "typescript": "^4.3.4"
+  }
+}
