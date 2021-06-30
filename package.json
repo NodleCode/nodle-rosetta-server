@@ -16,8 +16,15 @@
   },
   "homepage": "https://github.com/ConsiderItDone/nodle-rosetta-server#readme",
   "dependencies": {
+    "@polkadot/api": "^4.16.2",
     "babel": "^6.23.0",
+    "js-yaml": "^3.14.1",
     "rosetta-typescript-sdk": "github:ConsiderItDone/rosetta-typescript-sdk",
     "typescript": "^4.3.4"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.1",
+    "@types/node": "^15.12.5",
+    "prettier": "^2.3.2"
   }
 }

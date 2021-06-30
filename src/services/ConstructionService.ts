@@ -17,7 +17,7 @@ import {
   ConstructionSubmitRequest,
   Params,
   TransactionIdentifierResponse,
-} from "rosetta-typescript-sdk/src/types";
+} from "types";
 
 /**
  * Get Transaction Construction Metadata

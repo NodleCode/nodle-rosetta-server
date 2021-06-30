@@ -1,13 +1,11 @@
+import { getApi } from "../api";
 import {
   BlockRequest,
   BlockResponse,
   BlockTransactionRequest,
   BlockTransactionResponse,
   Params,
-} from "rosetta-typescript-sdk/src/types";
-
-import { Client } from "rosetta-typescript-sdk";
-const Types = Client;
+} from "types";
 
 /* Data API: Block */
 
@@ -18,87 +16,68 @@ const Types = Client;
  * blockRequest BlockRequest
  * returns BlockResponse
  * */
-export const block = async (
+export async function block(
   params: Params<BlockRequest>
-): Promise<BlockResponse> => {
-  const { blockRequest } = params;
+): Promise<BlockResponse> {
+  const api = await getApi("ws://3.217.156.114:9944");
+  const { body: blockRequest } = params;
+  const hash = blockRequest.block_identifier.hash;
 
-  if (blockRequest.block_identifier.index != 1000) {
-    const previousBlockIndex = Math.max(
-      0,
-      blockRequest.block_identifier.index - 1
-    );
-
-    const blockIdentifier = new Types.BlockIdentifier(
-      blockRequest.block_identifier.index,
-      `block ${blockRequest.block_identifier.index}`
-    );
-
-    const parentBlockIdentifier = new Types.BlockIdentifier(
-      previousBlockIndex,
-      `block ${previousBlockIndex}`
-    );
-
-    const timestamp = Date.now() - 500000;
-    const transactions = [];
-
-    const block = new Types.Block(
-      blockIdentifier,
-      parentBlockIdentifier,
-      timestamp,
-      transactions
-    );
-
-    return new Types.BlockResponse(block);
-  }
-
-  const previousBlockIndex = Math.max(
-    0,
-    blockRequest.block_identifier.index - 1
-  );
-
-  const blockIdentifier = new Types.BlockIdentifier(1000, "block 1000");
-
-  const parentBlockIdentifier = new Types.BlockIdentifier(999, "block 999");
-
-  const timestamp = 1586483189000;
-  const transactionIdentifier = new Types.TransactionIdentifier(
-    "transaction 0"
-  );
-  const operations = [
-    Types.Operation.constructFromObject({
-      operation_identifier: new Types.OperationIdentifier(0),
-      type: "Transfer",
-      status: "Success",
-      account: new Types.AccountIdentifier("account 0"),
-      amount: new Types.Amount("-1000", new Types.Currency("ROS", 2)),
-    }),
-
-    Types.Operation.constructFromObject({
-      operation_identifier: new Types.OperationIdentifier(1),
-      related_operations: new Types.OperationIdentifier(0),
-      type: "Transfer",
-      status: "Reverted",
-      account: new Types.AccountIdentifier("account 1"),
-      amount: new Types.Amount("1000", new Types.Currency("ROS", 2)),
-    }),
-  ];
-
-  const transactions = [
-    new Types.Transaction(transactionIdentifier, operations),
-  ];
-
-  const block = new Types.Block(
-    blockIdentifier,
-    parentBlockIdentifier,
-    timestamp,
-    transactions
-  );
-
-  const otherTransactions = [new Types.TransactionIdentifier("transaction 1")];
-
-  return new Types.BlockResponse(block, otherTransactions);
-};
+  const [{ block }, timestamp] = await Promise.all([
+    api.rpc.chain.getBlock(hash),
+    api.query.timestamp.now.at(hash),
+  ]);
+  return {
+    block: {
+      block_identifier: {
+        hash: block.hash.toString(),
+        index: block.header.number.toNumber(),
+      },
+      parent_block_identifier: { hash: "", index: 1 },
+      timestamp: timestamp.toNumber(),
+      transactions: [
+        {
+          operations: [
+            {
+              operation_identifier: { index: 1, network_index: 1 },
+              type: "",
+              account: {
+                address: "",
+                metadata: {},
+                sub_account: { address: "", metadata: {} },
+              },
+              amount: {
+                value: "",
+                currency: { decimals: 1, symbol: "", metadata: {} },
+                metadata: {},
+              },
+              metadata: {},
+              coin_change: {
+                coin_action: "coin_created", //| 'coin_spent',
+                coin_identifier: { identifier: "" },
+              },
+              related_operations: [{ index: 1, network_index: 1 }],
+              status: "",
+            },
+          ],
+          transaction_identifier: { hash: "" },
+          related_transactions: [
+            {
+              direction: "forward", // | 'backward'
+              transaction_identifier: { hash: "" },
+              network_identifier: {
+                blockchain: "",
+                network: "",
+                sub_network_identifier: { network: "", metadata: {} },
+              },
+            },
+          ],
+          metadata: {},
+        },
+      ],
+    },
+  };
+}
 
 /**
  * Get a Block Transaction
@@ -110,20 +89,46 @@ export const block = async (
 export const blockTransaction = async (
   params: Params<BlockTransactionRequest>
 ): Promise<BlockTransactionResponse> => {
-  const { blockTransactionRequest } = params;
+  const { body: blockTransactionRequest } = params;
 
-  const transactionIdentifier = new Types.TransactionIdentifier(
-    "transaction 1"
-  );
-  const operations = [
-    Types.Operation.constructFromObject({
-      operation_identifier: new Types.OperationIdentifier(0),
-      type: "Reward",
-      status: "Success",
-      account: new Types.AccountIdentifier("account 2"),
-      amount: new Types.Amount("1000", new Types.Currency("ROS", 2)),
-    }),
-  ];
-
-  return new Types.Transaction(transactionIdentifier, operations);
+  return {
+    transaction: {
+      transaction_identifier: { hash: "" },
+      operations: [
+        {
+          operation_identifier: { index: 1, network_index: 1 },
+          type: "",
+          account: {
+            address: "",
+            metadata: {},
+            sub_account: { address: "", metadata: {} },
+          },
+          amount: {
+            value: "",
+            currency: { decimals: 1, symbol: "", metadata: {} },
+            metadata: {},
+          },
+          metadata: {},
+          coin_change: {
+            coin_action: "coin_created", //| 'coin_spent',
+            coin_identifier: { identifier: "" },
+          },
+          related_operations: [{ index: 1, network_index: 1 }],
+          status: "",
+        },
+      ],
+      metadata: {},
+      related_transactions: [
+        {
+          direction: "forward", // | 'backward'
+          transaction_identifier: { hash: "" },
+          network_identifier: {
+            blockchain: "",
+            network: "",
+            sub_network_identifier: { network: "", metadata: {} },
+          },
+        },
+      ],
+    },
+  };
 };

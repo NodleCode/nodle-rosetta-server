@@ -3,7 +3,11 @@
     "baseUrl": ".",
     "module": "CommonJS",
     "target": "ESNext",
-    "paths": {},
+    "paths": {
+      "types": [
+        "src/types"
+      ]
+    },
     "esModuleInterop": true,
     "skipLibCheck": true,
     "sourceMap": true,
@@ -16,8 +20,7 @@
       "es2017",
       "ESNext"
     ],
-    "types": [
-    ],
+    "types": ["node"],
   },
   "include": [
     "*",

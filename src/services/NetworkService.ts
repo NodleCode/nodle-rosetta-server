@@ -3,7 +3,7 @@ import {
   NetworkRequest,
   NetworkStatusResponse,
   Params,
-} from "rosetta-typescript-sdk/src/types";
+} from "types";
 
 import { Client } from "rosetta-typescript-sdk";
 const Types = Client;
@@ -48,11 +48,32 @@ export const networkOptions = async (
   const operationTypes = ["Transfer", "Reward"];
 
   const errors = [new Types.Error(1, "not implemented", false)];
-
-  return new Types.NetworkOptionsResponse(
-    new Types.Version(rosettaVersion, nodeVersion),
-    new Types.Allow(operationStatuses, operationTypes, errors)
-  );
+  return {
+    allow: {
+      balance_exemptions: [
+        {
+          currency: { decimals: 1, metadata: {}, symbol: "" },
+          exemption_type: "greater_or_equal", // | 'less_or_equal' | 'dynamic',
+          sub_account_address: "",
+        },
+      ],
+      call_methods: [""],
+      errors: [
+        { code: 1, message: "", retriable: true, description: "", details: {} },
+      ],
+      historical_balance_lookup: true,
+      mempool_coins: true,
+      operation_statuses: [{ status: "", successful: true }],
+      operation_types: [""],
+      timestamp_start_index: 1,
+    },
+    version: {
+      node_version: "",
+      rosetta_version: "",
+      metadata: {},
+      middleware_version: "",
+    },
+  };
 };
 
 /**
@@ -71,11 +92,12 @@ export const networkStatus = async (
   const currentBlockTimestamp = 1586483189000;
   const genesisBlockIdentifier = new Types.BlockIdentifier(0, "block 0");
   const peers = [new Types.Peer("peer 1")];
-
-  return new Types.NetworkStatusResponse(
-    currentBlockIdentifier,
-    currentBlockTimestamp,
-    genesisBlockIdentifier,
-    peers
-  );
+  return {
+    current_block_identifier: { hash: "", index: 1 },
+    current_block_timestamp: 1,
+    genesis_block_identifier: { hash: "", index: 1 },
+    peers: [{ peer_id: "", metadata: {} }],
+    oldest_block_identifier: { hash: "", index: 1 },
+    sync_status: { current_index: 1, stage: "", synced: true, target_index: 1 },
+  };
 };

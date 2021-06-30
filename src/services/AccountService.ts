@@ -1,8 +1,4 @@
-import {
-  AccountBalanceRequest,
-  AccountBalanceResponse,
-  Params,
-} from "rosetta-typescript-sdk/src/types";
+import { AccountBalanceRequest, AccountBalanceResponse, Params } from "types";
 
 /* Data API: Account */
 
@@ -17,6 +13,16 @@ import {
 export const balance = async (
   params: Params<AccountBalanceRequest>
 ): Promise<AccountBalanceResponse> => {
-  const { accountBalanceRequest } = params;
-  return {} as AccountBalanceResponse;
+  const { body: accountBalanceRequest } = params;
+  return {
+    block_identifier: { hash: "", index: 1 },
+    balances: [
+      {
+        value: "",
+        currency: { decimals: 1, symbol: "", metadata: {} },
+        metadata: {},
+      },
+    ],
+    metadata: {},
+  };
 };

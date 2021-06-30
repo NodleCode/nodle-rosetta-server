@@ -4,7 +4,7 @@ import {
   MempoolTransactionResponse,
   NetworkRequest,
   Params,
-} from "rosetta-typescript-sdk/src/types";
+} from "types";
 
 /* Data API: Mempool */
 
@@ -19,7 +19,7 @@ export const mempool = async (
   params: Params<NetworkRequest>
 ): Promise<MempoolResponse> => {
   const { mempoolRequest } = params;
-  return {} as MempoolResponse;
+  return { transaction_identifiers: [{ hash: "" }] };
 };
 
 /**
@@ -33,5 +33,45 @@ export const mempoolTransaction = async (
   params: Params<MempoolTransactionRequest>
 ): Promise<MempoolTransactionResponse> => {
   const { mempoolTransactionRequest } = params;
-  return {} as MempoolTransactionResponse;
+  return {
+    transaction: {
+      operations: [
+        {
+          operation_identifier: { index: 1, network_index: 1 },
+          type: "",
+          status: "",
+          account: {
+            address: "",
+            metadata: {},
+            sub_account: { address: "", metadata: {} },
+          },
+          amount: {
+            value: "",
+            currency: { decimals: 1, symbol: "", metadata: {} },
+            metadata: {},
+          },
+          coin_change: {
+            coin_action: "coin_spent", // | 'coin_created'}
+            coin_identifier: { identifier: "" },
+          },
+          related_operations: [{ index: 1, network_index: 1 }],
+          metadata: {},
+        },
+      ],
+      transaction_identifier: { hash: "" },
+      metadata: {},
+      related_transactions: [
+        {
+          direction: "forward", // |'backward'
+          transaction_identifier: { hash: "" },
+          network_identifier: {
+            blockchain: "",
+            network: "",
+            sub_network_identifier: { network: "", metadata: {} },
+          },
+        },
+      ],
+    },
+    metadata: {},
+  };
 };
