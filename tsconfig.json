@@ -12,7 +12,6 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "noEmitOnError": true,
-    "allowJs": true,
     "lib": [
       "es6",
       "dom",
