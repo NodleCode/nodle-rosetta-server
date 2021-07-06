@@ -1,14 +1,33 @@
+import { NetworkRequest, Params } from "types";
+import extrinsicOpMap from "../utils/extrinsic-operation-map";
+
+import { Client } from "rosetta-node-sdk";
+import networkIdentifiers from "../network";
+import { getNetworkApiFromRequest } from "src/utils/connections";
+import { errorTypes } from "src/utils/error-types";
 import {
+  Allow,
+  NetworkListResponse,
   NetworkOptionsResponse,
-  NetworkRequest,
+  OperationStatus,
+  Version,
+  Error,
+  BlockIdentifier,
   NetworkStatusResponse,
-  Params,
-} from "types";
+} from "src/client";
 
-import { Client } from "rosetta-typescript-sdk";
-const Types = Client;
+// Rosetta API target version
+const rosettaVersion = "1.4.10";
 
-import { networkIdentifier } from "../network";
+// Binary true/false success state for extrinsics
+const operationStatuses = [
+  new OperationStatus("SUCCESS", true),
+  new OperationStatus("FAILURE", false),
+];
+// List of operation supported types
+const operationTypes = Object.keys(extrinsicOpMap).map(
+  (key) => extrinsicOpMap[key]
+);
 
 /* Data API: Network */
 
@@ -19,12 +38,31 @@ import { networkIdentifier } from "../network";
  * metadataRequest MetadataRequest
  * returns NetworkListResponse
  * */
-export const networkList = async (params) => {
-  const { metadataRequest } = params;
+/* export const networkList = async (params) => {
+  const { body: metadataRequest } = params;
 
-  return new Types.NetworkListResponse([networkIdentifier]);
-};
-
+  return {
+    network_identifiers: [
+      {
+        blockchain: "nodle",
+        network: "mainnet",
+        sub_network_identifier: {
+          network: "shard 1",
+          metadata: {
+            producer: "0x52bc44d5378309ee2abf1539bf71de1b7d7be3b5",
+          },
+        },
+      },
+    ],
+  };
+}; */
+export const networkList = async () =>
+  new NetworkListResponse(
+    networkIdentifiers.map(({ blockchain, network }) => ({
+      blockchain,
+      network,
+    }))
+  );
 /**
  * Get Network Options
  * This endpoint returns the version information and allowed network-specific types for a NetworkIdentifier. Any NetworkIdentifier returned by /network/list should be accessible here.  Because options are retrievable in the context of a NetworkIdentifier, it is possible to define unique options for each network.
@@ -37,43 +75,21 @@ export const networkOptions = async (
 ): Promise<NetworkOptionsResponse> => {
   const { networkRequest } = params;
 
-  const rosettaVersion = "1.4.0";
-  const nodeVersion = "0.0.1";
+  // Get api connection
+  const api = await getNetworkApiFromRequest(networkRequest);
+  const nodeVersion = await api.rpc.system.version();
+  const errors = errorTypes.map(
+    (error) => new Error(error.code, error.message, error.retriable)
+  );
 
-  const operationStatuses = [
-    new Types.OperationStatus("Success", true),
-    new Types.OperationStatus("Reverted", false),
-  ];
-
-  const operationTypes = ["Transfer", "Reward"];
-
-  const errors = [new Types.Error(1, "not implemented", false)];
-  return {
-    allow: {
-      balance_exemptions: [
-        {
-          currency: { decimals: 1, metadata: {}, symbol: "" },
-          exemption_type: "greater_or_equal", // | 'less_or_equal' | 'dynamic',
-          sub_account_address: "",
-        },
-      ],
-      call_methods: [""],
-      errors: [
-        { code: 1, message: "", retriable: true, description: "", details: {} },
-      ],
-      historical_balance_lookup: true,
-      mempool_coins: true,
-      operation_statuses: [{ status: "", successful: true }],
-      operation_types: [""],
-      timestamp_start_index: 1,
-    },
-    version: {
-      node_version: "",
-      rosetta_version: "",
-      metadata: {},
-      middleware_version: "",
-    },
-  };
+  // Filter duplicte op types
+  const opTypes = operationTypes.filter(
+    (item, index) => operationTypes.indexOf(item) === index
+  );
+  return new NetworkOptionsResponse(
+    new Version(rosettaVersion, nodeVersion),
+    new Allow(operationStatuses, opTypes, errors)
+  );
 };
 
 /**
@@ -87,17 +103,31 @@ export const networkStatus = async (
   params: Params<NetworkRequest>
 ): Promise<NetworkStatusResponse> => {
   const { networkRequest } = params;
+  // Get api connection
+  const api = await getNetworkApiFromRequest(networkRequest);
 
-  const currentBlockIdentifier = new Types.BlockIdentifier(1000, "block 1000");
-  const currentBlockTimestamp = 1586483189000;
-  const genesisBlockIdentifier = new Types.BlockIdentifier(0, "block 0");
-  const peers = [new Types.Peer("peer 1")];
-  return {
-    current_block_identifier: { hash: "", index: 1 },
-    current_block_timestamp: 1,
-    genesis_block_identifier: { hash: "", index: 1 },
-    peers: [{ peer_id: "", metadata: {} }],
-    oldest_block_identifier: { hash: "", index: 1 },
-    sync_status: { current_index: 1, stage: "", synced: true, target_index: 1 },
-  };
+  // Get block info
+  const genesisBlockIndex = 0;
+  const currentBlockTimestamp = (await api.query.timestamp.now()).toNumber();
+  const genesisBlockHash = await api.rpc.chain.getBlockHash(genesisBlockIndex);
+  const currentBlock = await api.rpc.chain.getBlock();
+
+  // Format into correct types
+  const currentBlockIdentifier = new BlockIdentifier(
+    currentBlock.block.header.number,
+    currentBlock.block.header.hash.toHex()
+  );
+  const genesisBlockIdentifier = new BlockIdentifier(
+    genesisBlockIndex,
+    genesisBlockHash
+  );
+
+  // Dont need any peers for now, format response
+  const peers = [];
+  return new NetworkStatusResponse(
+    currentBlockIdentifier,
+    currentBlockTimestamp,
+    genesisBlockIdentifier,
+    peers
+  );
 };

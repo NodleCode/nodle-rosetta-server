@@ -1,0 +1,28 @@
+{
+  "rootOfTrust": {
+    "isRootCertificateValid": {
+      "description": "Verify if a root certificate is valid",
+      "params": [
+        {
+          "name": "cert",
+          "type": "CertificateId"
+        }
+      ],
+      "type": "bool"
+    },
+    "isChildCertificateValid": {
+      "description": "Verify if a child and root certificates are valid",
+      "params": [
+        {
+          "name": "root",
+          "type": "CertificateId"
+        },
+        {
+          "name": "child",
+          "type": "CertificateId"
+        }
+      ],
+      "type": "bool"
+    }
+  }
+}

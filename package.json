@@ -16,9 +16,11 @@
   },
   "homepage": "https://github.com/ConsiderItDone/nodle-rosetta-server#readme",
   "dependencies": {
-    "@polkadot/api": "^4.16.2",
+    "@polkadot/api": "^3.11.1",
+    "@substrate/txwrapper": "^3.10.12",
     "babel": "^6.23.0",
     "js-yaml": "^3.14.1",
+    "rosetta-node-sdk": "docknetwork/rosetta-node-sdk",
     "rosetta-typescript-sdk": "github:ConsiderItDone/rosetta-typescript-sdk",
     "typescript": "^4.3.4"
   },

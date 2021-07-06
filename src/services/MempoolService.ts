@@ -1,3 +1,4 @@
+import { ERROR_TX_INVALID, throwError } from "src/utils/error-types";
 import {
   MempoolResponse,
   MempoolTransactionRequest,
@@ -19,6 +20,8 @@ export const mempool = async (
   params: Params<NetworkRequest>
 ): Promise<MempoolResponse> => {
   const { mempoolRequest } = params;
+  // No mempool transactions for substrate, assumes block time is within few seconds
+  return {} as MempoolResponse;
   return { transaction_identifiers: [{ hash: "" }] };
 };
 
@@ -33,6 +36,9 @@ export const mempoolTransaction = async (
   params: Params<MempoolTransactionRequest>
 ): Promise<MempoolTransactionResponse> => {
   const { mempoolTransactionRequest } = params;
+
+  throwError(ERROR_TX_INVALID);
+  return {} as MempoolTransactionResponse;
   return {
     transaction: {
       operations: [
