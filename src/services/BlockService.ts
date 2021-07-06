@@ -16,7 +16,6 @@ import {
 } from "../utils/connections";
 
 import BN from "bn.js";
-import RosettaSDK from "rosetta-node-sdk";
 
 import extrinsicOpMap from "../utils/extrinsic-operation-map";
 import {

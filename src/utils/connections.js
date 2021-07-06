@@ -1,5 +1,5 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
-import RosettaSDK from 'rosetta-node-sdk';
+import * as RosettaSDK from 'rosetta-typescript-sdk';
 
 import networkIdentifiers from '../network';
 import Registry from '../offline-signing/registry';

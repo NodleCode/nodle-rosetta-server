@@ -1,4 +1,4 @@
-import { Server as RosettaServer } from "rosetta-node-sdk";
+import { Server as RosettaServer } from "rosetta-typescript-sdk";
 import * as ServiceHandlers from "./services";
 
 import { OpenApiConfig } from "types";
@@ -7,6 +7,7 @@ import { OpenApiConfig } from "types";
 /* Create a server configuration */
 const Server = new RosettaServer({
   URL_PORT: 8080,
+  OPENAPI_YAML: "./api/openapi.yaml"
 } as OpenApiConfig);
 
 /* Construction API */

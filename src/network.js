@@ -1,7 +1,7 @@
-import { Client } from 'rosetta-node-sdk'
+import { Client } from 'rosetta-typescript-sdk'
 export const networkIdentifier = new Client.NetworkIdentifier('Rosetta', 'Testnet');
 
-import RosettaSDK from 'rosetta-node-sdk';
+import * as RosettaSDK from 'rosetta-typescript-sdk';
 import fs from 'fs';
 
 // Networks folder relative to execution publicPath

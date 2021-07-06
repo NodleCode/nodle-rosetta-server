@@ -1,4 +1,4 @@
-import RosettaSDK from 'rosetta-node-sdk';
+import * as RosettaSDK from 'rosetta-typescript-sdk';
 
 export const ERROR_NOT_IMPLEMENTED = 0;
 export const ERROR_UNAVAILABLE_OFFLINE = 1;

@@ -1,5 +1,4 @@
 import { AccountBalanceRequest, Params } from "types";
-import RosettaSDK from "rosetta-node-sdk";
 
 import { ERROR_NOT_IMPLEMENTED, throwError } from "../utils/error-types";
 

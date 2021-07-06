@@ -20,8 +20,7 @@
     "@substrate/txwrapper": "^3.10.12",
     "babel": "^6.23.0",
     "js-yaml": "^3.14.1",
-    "rosetta-node-sdk": "docknetwork/rosetta-node-sdk",
-    "rosetta-typescript-sdk": "github:ConsiderItDone/rosetta-typescript-sdk",
+    "rosetta-typescript-sdk": "file:./rosetta-typescript-sdk-1.0.0.tgz",
     "typescript": "^4.3.4"
   },
   "devDependencies": {
