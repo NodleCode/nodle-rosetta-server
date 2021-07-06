@@ -1,4 +1,4 @@
-import { ERROR_TX_INVALID, throwError } from "src/utils/error-types";
+import { ERROR_TX_INVALID, throwError } from "../utils/error-types";
 import {
   MempoolResponse,
   MempoolTransactionRequest,

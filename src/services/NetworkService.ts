@@ -1,10 +1,8 @@
 import { NetworkRequest, Params } from "types";
 import extrinsicOpMap from "../utils/extrinsic-operation-map";
-
-import { Client } from "rosetta-node-sdk";
 import networkIdentifiers from "../network";
-import { getNetworkApiFromRequest } from "src/utils/connections";
-import { errorTypes } from "src/utils/error-types";
+import { getNetworkApiFromRequest } from "../utils/connections";
+import { errorTypes } from "../utils/error-types";
 import {
   Allow,
   NetworkListResponse,
@@ -14,7 +12,7 @@ import {
   Error,
   BlockIdentifier,
   NetworkStatusResponse,
-} from "src/client";
+} from "../client";
 
 // Rosetta API target version
 const rosettaVersion = "1.4.10";
