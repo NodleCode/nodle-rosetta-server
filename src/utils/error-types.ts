@@ -1,5 +1,4 @@
-import * as RosettaSDK from 'rosetta-typescript-sdk';
-
+import { Error } from "../client";
 export const ERROR_NOT_IMPLEMENTED = 0;
 export const ERROR_UNAVAILABLE_OFFLINE = 1;
 export const ERROR_POLKADOT_ERROR = 2;
@@ -14,57 +13,57 @@ export const ERROR_TX_INVALID = 9;
 export const errorTypes = [
   {
     code: 0,
-    message: 'Endpoint not implemented',
+    message: "Endpoint not implemented",
     retriable: false,
   },
   {
     code: 1,
-    message: 'Endpoint unavailable offline',
+    message: "Endpoint unavailable offline",
     retriable: false,
   },
   {
     code: 2,
-    message: 'Polkadot error',
+    message: "Polkadot error",
     retriable: false,
   },
   {
     code: 3,
-    message: 'Unable to decompress public key',
+    message: "Unable to decompress public key",
     retriable: false,
   },
   {
     code: 4,
-    message: 'Unable to parse intent',
+    message: "Unable to parse intent",
     retriable: false,
   },
   {
     code: 5,
-    message: 'Unable to parse intermediate result',
+    message: "Unable to parse intermediate result",
     retriable: false,
   },
   {
     code: 6,
-    message: 'Signature invalid',
+    message: "Signature invalid",
     retriable: false,
   },
   {
     code: 7,
-    message: 'Unable to broadcast transaction',
+    message: "Unable to broadcast transaction",
     retriable: false,
   },
   {
     code: 8,
-    message: 'Invalid address',
+    message: "Invalid address",
     retriable: false,
   },
   {
     code: 9,
-    message: 'Transaction invalid',
+    message: "Transaction invalid",
     retriable: false,
   },
 ];
 
-export function throwError(type, description) {
+export function throwError(type: number, description?: string) {
   const error = errorTypes[type];
-  throw new RosettaSDK.Client.Error(error.code, error.message, error.retriable, description);
+  throw new Error(error.code, error.message, error.retriable, description);
 }

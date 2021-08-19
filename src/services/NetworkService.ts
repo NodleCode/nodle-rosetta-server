@@ -36,24 +36,7 @@ const operationTypes = Object.keys(extrinsicOpMap).map(
  * metadataRequest MetadataRequest
  * returns NetworkListResponse
  * */
-/* export const networkList = async (params) => {
-  const { body: metadataRequest } = params;
 
-  return {
-    network_identifiers: [
-      {
-        blockchain: "nodle",
-        network: "mainnet",
-        sub_network_identifier: {
-          network: "shard 1",
-          metadata: {
-            producer: "0x52bc44d5378309ee2abf1539bf71de1b7d7be3b5",
-          },
-        },
-      },
-    ],
-  };
-}; */
 export const networkList = async () =>
   new NetworkListResponse(
     networkIdentifiers.map(({ blockchain, network }) => ({
@@ -61,9 +44,13 @@ export const networkList = async () =>
       network,
     }))
   );
+  
 /**
  * Get Network Options
- * This endpoint returns the version information and allowed network-specific types for a NetworkIdentifier. Any NetworkIdentifier returned by /network/list should be accessible here.  Because options are retrievable in the context of a NetworkIdentifier, it is possible to define unique options for each network.
+ * This endpoint returns the version information and allowed network-specific types for a NetworkIdentifier.
+ * Any NetworkIdentifier returned by /network/list should be accessible here.
+ * Because options are retrievable in the context of a NetworkIdentifier,
+ * it is possible to define unique options for each network.
  *
  * networkRequest NetworkRequest
  * returns NetworkOptionsResponse
@@ -85,7 +72,7 @@ export const networkOptions = async (
     (item, index) => operationTypes.indexOf(item) === index
   );
   return new NetworkOptionsResponse(
-    new Version(rosettaVersion, nodeVersion),
+    new Version(rosettaVersion, nodeVersion.toString()),
     new Allow(operationStatuses, opTypes, errors)
   );
 };
@@ -112,12 +99,12 @@ export const networkStatus = async (
 
   // Format into correct types
   const currentBlockIdentifier = new BlockIdentifier(
-    currentBlock.block.header.number,
+    currentBlock.block.header.number.toNumber(),
     currentBlock.block.header.hash.toHex()
   );
   const genesisBlockIdentifier = new BlockIdentifier(
     genesisBlockIndex,
-    genesisBlockHash
+    genesisBlockHash.toString()
   );
 
   // Dont need any peers for now, format response

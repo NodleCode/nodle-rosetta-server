@@ -26,6 +26,7 @@ import { ApiPromise } from "@polkadot/api";
 export const balance = async (
   params: Params<AccountBalanceRequest>
 ): Promise<AccountBalanceResponse> => {
+  console.log(params)
   const { accountBalanceRequest } = params;
   const { address } = accountBalanceRequest.account_identifier;
   const { index, hash } = accountBalanceRequest.block_identifier || {

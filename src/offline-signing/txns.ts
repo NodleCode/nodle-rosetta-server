@@ -1,22 +1,26 @@
 import {
   createSigningPayload,
   methods,
-} from '@substrate/txwrapper';
+  UnsignedTransaction,
+} from "@substrate/txwrapper";
+import Registry from "./registry";
 
-/**
- * Build a transfer txn
- * @param {Object} params - An object containing the parameters.
- * @param params.from
- * @param params.to
- * @param params.value
- * @param params.tip
- * @param params.nonce
- * @param params.eraPeriod
- * @param params.blockNumber
- * @param params.blockHash
- * @param params.registry - This is an instance of `Registry` class
- * @return {{unsignedTxn: Object, signingPayload: string}}
- */
+interface TransferParams {
+  from: string;
+  to: string;
+  value: string | number;
+  tip?: number;
+  nonce: number;
+  eraPeriod?: number;
+  blockNumber: number;
+  blockHash: string;
+  registry: Registry;
+}
+interface TransferTxn {
+  unsignedTxn: UnsignedTransaction;
+  signingPayload: string;
+}
+
 export default function buildTransferTxn({
   from,
   to,
@@ -27,7 +31,7 @@ export default function buildTransferTxn({
   blockNumber,
   blockHash,
   registry,
-}) {
+}: TransferParams): TransferTxn {
   const unsignedTxn = methods.balances.transfer(
     {
       value,
@@ -48,7 +52,7 @@ export default function buildTransferTxn({
     {
       metadataRpc: registry.metadata,
       registry: registry.registry,
-    },
+    }
   );
   const signingPayload = createSigningPayload(unsignedTxn, {
     registry: registry.registry,

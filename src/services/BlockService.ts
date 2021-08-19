@@ -1,414 +1,27 @@
-import { getApi } from "../api";
-import {
-  BlockRequest,
-  BlockTransactionRequest,
-  BlockTransactionResponse,
-  Params,
-} from "types";
-
-import { getTypeDef } from "@polkadot/types";
-import { u8aToHex } from "@polkadot/util";
-
+import { BlockRequest, BlockTransactionRequest, Params } from "types";
+import { BlockHash, EventRecord } from "@polkadot/types/interfaces";
 import {
   getNetworkApiFromRequest,
   getNetworkCurrencyFromRequest,
   getNetworkIdentifierFromRequest,
 } from "../utils/connections";
 
-import BN from "bn.js";
-
-import extrinsicOpMap from "../utils/extrinsic-operation-map";
 import {
-  AccountIdentifier,
-  Amount,
   Block,
   BlockIdentifier,
   BlockResponse,
   Operation,
   OperationIdentifier,
-  Transaction,
-  TransactionIdentifier,
+  BlockTransactionResponse,
 } from "../client";
 import { ApiPromise } from "@polkadot/api";
-
-const OPERATION_STATUS_SUCCESS = "SUCCESS";
-const OPERATION_STATUS_FAILURE = "FAILURE";
-const OPERATION_STATUS_UNKNOWN = "UNKNOWN";
-
-const EXTRINSIC_SUCCESS_EVENT = "system:ExtrinsicSuccess";
-const EXTRINSIC_FAILED_EVENT = "system:ExtrinsicFailed";
-
-const epochDetailsCache = {};
-
-async function getDefaultPayment() {
-  return {
-    partialFee: new BN("0"),
-  };
-}
-
-// TODO: refactor below methods to use an object->function mapping
-async function getOperationAmountFromEvent(
-  operationId,
-  args,
-  api,
-  blockNumber
-) {
-  if (
-    operationId === "balances.transfer" ||
-    operationId === "poamodule.txnfeesgiven"
-  ) {
-    return api.createType("Balance", args[2]);
-  }
-  if (
-    operationId === "balances.reserved" ||
-    operationId === "balances.unreserved" ||
-    operationId === "balances.endowed"
-  ) {
-    return api.createType("Balance", args[1]);
-  }
-  if (operationId === "poamodule.epochends") {
-    const epochNo = args[0];
-    const epochId = epochNo.toString();
-    let epochDetails = epochDetailsCache[epochId];
-    if (!epochDetails) {
-      epochDetails = await api.query.poAModule.epochs(epochNo);
-      epochDetailsCache[epochId] = epochDetails;
-    }
-    return api.createType(
-      "Balance",
-      epochDetails.emission_for_treasury.toString()
-    );
-  }
-  if (operationId === "balances.balanceset") {
-    const address = args[0];
-    const newBalance = args[1];
-    const previousBlockHash = await api.rpc.chain.getBlockHash(
-      (blockNumber.toNumber ? blockNumber.toNumber() : blockNumber) - 1
-    );
-    const {
-      data: { free },
-    } = await api.query.system.account.at(previousBlockHash, address);
-    const deltaBalance = new BN(newBalance.toString()).sub(
-      new BN(free.toString())
-    );
-    return deltaBalance.toString();
-  }
-  return 0;
-}
-
-function getEffectedAccountFromEvent(
-  operationId,
-  args,
-  api,
-  networkIdentifier
-) {
-  if (
-    operationId === "poamodule.txnfeesgiven" ||
-    operationId === "balances.transfer"
-  ) {
-    return args[1];
-  }
-  if (operationId === "poamodule.epochends") {
-    return (
-      networkIdentifier.properties.poaModule &&
-      networkIdentifier.properties.poaModule.treasury
-    );
-  }
-  return args[0];
-}
-
-function getSourceAccountFromEvent(operationId, args) {
-  if (operationId === "balances.transfer") {
-    return args[0];
-  }
-
-  return "";
-}
-
-function getEffectedAccountFromExtrinsic(api, extrinsic, extrinsicMethod) {
-  if (
-    extrinsicMethod === "balances.transfer" ||
-    extrinsicMethod === "balances.transferkeepalive"
-  ) {
-    return extrinsic.method.args[0].toString();
-  }
-
-  return "";
-}
-
-function getOperationAmountFromExtrinsic(api, extrinsic, extrinsicMethod) {
-  if (
-    extrinsicMethod === "balances.transfer" ||
-    extrinsicMethod === "balances.transferkeepalive"
-  ) {
-    return api.createType("Balance", extrinsic.method.args[1]);
-  }
-
-  return 0;
-}
-
-function getSourceAccountFromExtrinsic(extrinsic) {
-  return extrinsic.signer.toString();
-}
-
-function addToOperations(
-  operations,
-  eventOpType,
-  status,
-  destAccountAddress,
-  balanceAmount,
-  sourceAccountAddress,
-  currency
-) {
-  // Apply minus delta balance from source (typically index 0)
-  if (sourceAccountAddress) {
-    operations.push(
-      Operation.constructFromObject({
-        operation_identifier: new OperationIdentifier(operations.length),
-        type: eventOpType,
-        status,
-        account: new AccountIdentifier(sourceAccountAddress),
-        amount: new Amount(balanceAmount.neg().toString(), currency),
-      })
-    );
-  }
-
-  // Operations map to balance changing events (typically index 1)
-  operations.push(
-    Operation.constructFromObject({
-      operation_identifier: new OperationIdentifier(operations.length),
-      type: eventOpType,
-      status,
-      account: new AccountIdentifier(destAccountAddress),
-      amount: new Amount(balanceAmount.toString(), currency),
-    })
-  );
-}
-
-async function processRecordToOp(
-  api,
-  record,
-  operations,
-  extrinsicArgs,
-  status,
-  allRecords,
-  currency,
-  networkIdentifier,
-  blockNumber
-) {
-  const { event } = record;
-  const operationId = `${event.section}.${event.method}`.toLowerCase();
-  const eventOpType = extrinsicOpMap[operationId];
-  if (eventOpType) {
-    const params = event.typeDef.map(({ type }) => ({
-      type: getTypeDef(type),
-    }));
-    const values = event.data.map((value) => ({ isValid: true, value }));
-    const args = params.map((param, index) => values[index].value);
-
-    const destAccountAddress = getEffectedAccountFromEvent(
-      operationId,
-      args,
-      api,
-      networkIdentifier
-    );
-    const balanceAmount = await getOperationAmountFromEvent(
-      operationId,
-      args,
-      api,
-      blockNumber
-    );
-    const sourceAccountAddress = getSourceAccountFromEvent(operationId, args);
-
-    addToOperations(
-      operations,
-      eventOpType,
-      status,
-      destAccountAddress,
-      balanceAmount,
-      sourceAccountAddress,
-      currency
-    );
-  } else {
-    console.error(
-      `unprocessed event:\n\t${event.section}:${
-        event.method
-      }:: (phase=${record.phase.toString()}) `
-    );
-  }
-}
-
-async function getTransactions(
-  currentBlock,
-  allRecords,
-  api,
-  shouldDisplay,
-  blockHash,
-  paymentInfos,
-  currency,
-  networkIdentifier
-) {
-  const transactions = [];
-  const fees = [];
-
-  // map between the extrinsics and events
-  const { extrinsics } = currentBlock.block;
-  const blockNumber = currentBlock.block.header.number.toNumber();
-
-  const promises = extrinsics.map(async (extrinsic, index) => {
-    const {
-      method: { method, section, args },
-      hash,
-    } = extrinsic;
-    const extrinsicMethod = `${section}.${method}`.toLowerCase();
-    if (extrinsicMethod === "timestamp.set") {
-      return;
-    }
-
-    const paymentInfo = paymentInfos[index];
-    const transactionIdentifier = new TransactionIdentifier(
-      hash.toHex().substr(2)
-    );
-    const operations = [];
-
-    let paysFee = false;
-    if (!shouldDisplay || shouldDisplay(section, method, hash)) {
-      // Get extrinsic status/fee info
-      let extrinsicStatus = OPERATION_STATUS_UNKNOWN;
-      allRecords
-        .filter(
-          ({ phase }) =>
-            phase.isApplyExtrinsic && phase.asApplyExtrinsic.eq(index)
-        )
-        .forEach((record) => {
-          const { event } = record;
-          const extrinsicAction = `${event.section}:${event.method}`;
-          const extrinsicSuccess = extrinsicAction === EXTRINSIC_SUCCESS_EVENT;
-          const extrinsicFailed = extrinsicAction === EXTRINSIC_FAILED_EVENT;
-          if (extrinsicSuccess) {
-            extrinsicStatus = OPERATION_STATUS_SUCCESS;
-          } else if (extrinsicFailed) {
-            extrinsicStatus = OPERATION_STATUS_FAILURE;
-          }
-
-          if (extrinsicSuccess || extrinsicFailed) {
-            const eventData = event.toHuman().data;
-            eventData.forEach((data) => {
-              if (data && data.paysFee === "Yes") {
-                paysFee = true;
-              }
-            });
-          }
-        });
-
-      // Parse events
-      if (extrinsicStatus === OPERATION_STATUS_SUCCESS) {
-        await Promise.all(
-          allRecords
-            .filter(
-              ({ phase }) =>
-                phase.isApplyExtrinsic && phase.asApplyExtrinsic.eq(index)
-            )
-            .map(async (record) =>
-              processRecordToOp(
-                api,
-                record,
-                operations,
-                args,
-                extrinsicStatus,
-                allRecords,
-                currency,
-                networkIdentifier,
-                blockNumber
-              )
-            )
-        );
-      } else {
-        // When an extrinsic fails we cant rely on the events to parse its operations
-        const operationType =
-          extrinsicOpMap[extrinsicMethod] || extrinsicMethod;
-        const destAccountAddress = getEffectedAccountFromExtrinsic(
-          api,
-          extrinsic,
-          extrinsicMethod
-        );
-        const balanceAmount = getOperationAmountFromExtrinsic(
-          api,
-          extrinsic,
-          extrinsicMethod
-        );
-        const sourceAccountAddress = getSourceAccountFromExtrinsic(extrinsic);
-        if (balanceAmount) {
-          addToOperations(
-            operations,
-            operationType,
-            extrinsicStatus,
-            destAccountAddress,
-            balanceAmount,
-            sourceAccountAddress,
-            currency
-          );
-        }
-      }
-    }
-
-    if (operations.length > 0) {
-      transactions.push(new Transaction(transactionIdentifier, operations));
-    }
-
-    const extrinsicData = extrinsic.toHuman();
-    const txFee = paymentInfo ? paymentInfo.partialFee.neg().toString() : "";
-    if (extrinsicData.isSigned && paysFee && txFee) {
-      fees.push({
-        account: new AccountIdentifier(extrinsicData.signer),
-        amount: new Amount(txFee, currency),
-      });
-    }
-  });
-
-  await Promise.all(promises);
-
-  return {
-    transactions,
-    fees,
-  };
-}
-
-async function getTransactionsFromEvents(
-  allRecords,
-  api,
-  currency,
-  networkIdentifier,
-  blockNumber
-): Promise<any> {
-  const extrinsicStatus = OPERATION_STATUS_SUCCESS;
-  return (
-    await Promise.all(
-      allRecords.map(async (record) => {
-        const operations = [];
-        await processRecordToOp(
-          api,
-          record,
-          operations,
-          null,
-          extrinsicStatus,
-          allRecords,
-          currency,
-          networkIdentifier,
-          blockNumber
-        );
-        if (operations.length) {
-          const transactionIdentifier = new TransactionIdentifier(
-            u8aToHex(record.hash).substr(2)
-          );
-          return new Transaction(transactionIdentifier, operations);
-        }
-
-        return undefined;
-      })
-    )
-  ).filter((event) => event !== undefined);
-}
+import {
+  getDefaultPayment,
+  getTransactions,
+  getTransactionsFromEvents,
+  OPERATION_STATUSES,
+} from "../utils/functions";
+import { Vec } from "@polkadot/types";
 
 /* Data API: Block */
 
@@ -475,6 +88,7 @@ export const block = async (
   // Get payment infos for all extrinsics
   const paymentInfoPromises = [];
   const { extrinsics } = currentBlock.block;
+
   for (let i = 0; i < extrinsics.length; i++) {
     const extrinsic = extrinsics[i];
     const prom = await api.rpc.payment
@@ -490,7 +104,6 @@ export const block = async (
     allRecords,
     api,
     null,
-    blockHash,
     paymentInfos,
     currency,
     networkIdentifier
@@ -499,7 +112,9 @@ export const block = async (
   // Get system events as this can also contain balance changing info (poa, reserved etc)
   // HACK: setting txHash to blockHash for system events, since they arent related to extrinsic hashes
   const systemTransactions = await getTransactionsFromEvents(
-    allRecords.filter(({ phase }) => !phase.isApplyExtrinsic),
+    allRecords.filter(
+      ({ phase }) => !phase.isApplyExtrinsic
+    ) as Vec<EventRecord>,
     api,
     currency,
     networkIdentifier,
@@ -516,7 +131,7 @@ export const block = async (
             operations.length + feeIndex
           ),
           type: "Fee",
-          status: OPERATION_STATUS_SUCCESS,
+          status: OPERATION_STATUSES.SUCCESS,
           ...fee,
         })
       )
@@ -556,7 +171,7 @@ export const blockTransaction = async (
   const { index, hash } = blockTransactionRequest.block_identifier;
 
   // Get block hash if not set
-  let blockHash = hash;
+  let blockHash: string | BlockHash = hash;
   let blockIndex = index;
   if (!blockHash) {
     blockHash = await api.rpc.chain.getBlockHash(index);
@@ -576,11 +191,10 @@ export const blockTransaction = async (
     api,
     (section, method, txhash) =>
       txhash.toString() === txIdentifier.hash.toString(),
-    blockHash,
     [],
     currency,
     networkIdentifier
   );
 
-  return transactions[0] || {};
+  return new BlockTransactionResponse(transactions[0]);
 };

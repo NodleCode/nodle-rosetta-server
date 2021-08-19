@@ -16,15 +16,16 @@
   },
   "homepage": "https://github.com/ConsiderItDone/nodle-rosetta-server#readme",
   "dependencies": {
+    "@consideritdone/rosetta-typescript-sdk": "^1.0.2",
     "@polkadot/api": "^3.11.1",
     "@substrate/txwrapper": "^3.10.12",
     "js-yaml": "^3.14.1",
-    "rosetta-typescript-sdk": "github:ConsiderItDone/rosetta-typescript-sdk",
     "typescript": "^4.3.4"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",
     "@babel/core": "^7.0.0",
+    "@polkadot/types": "3.11.1",
     "@types/js-yaml": "^4.0.1",
     "@types/node": "^15.12.5",
     "prettier": "^2.3.2"

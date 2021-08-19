@@ -1,17 +1,40 @@
-import { TypeRegistry } from '@polkadot/types';
-import { getSpecTypes } from '@polkadot/types-known';
-import { createMetadata } from '@substrate/txwrapper/lib/util/metadata';
+import { TypeRegistry } from "@polkadot/types";
+import { getSpecTypes } from "@polkadot/types-known";
+import { createMetadata } from "@substrate/txwrapper/lib/util/metadata";
+import { RegistryTypes } from "@polkadot/types/types";
 
 /**
  * A registry class that stores the types, metadata and chain information.
  */
+
+interface ChainInfo {
+  name: string;
+  specName: string;
+  specVersion: number;
+  genesis: string;
+  transactionVersion?: number;
+  properties: {
+    [key: string]: any;
+  };
+}
 export default class Registry {
-  constructor({ chainInfo, metadata, types }) {
+  _registry: TypeRegistry;
+  _metadata: string;
+  _chainInfo: ChainInfo;
+  constructor({
+    chainInfo,
+    metadata,
+    types,
+  }: {
+    chainInfo: ChainInfo;
+    metadata: string;
+    types: RegistryTypes;
+  }) {
     createMetadata.clear();
 
     const registry = new TypeRegistry();
     registry.setChainProperties(
-      registry.createType('ChainProperties', chainInfo.properties),
+      registry.createType("ChainProperties", chainInfo.properties)
     );
 
     registry.setKnownTypes({
@@ -22,8 +45,8 @@ export default class Registry {
         registry,
         chainInfo.name,
         chainInfo.specName,
-        chainInfo.specVersion,
-      ),
+        chainInfo.specVersion
+      )
     );
 
     registry.setMetadata(createMetadata(registry, metadata));
