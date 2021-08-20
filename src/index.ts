@@ -57,7 +57,8 @@ Server.register("/network/options", ServiceHandlers.Network.networkOptions);
 Server.register("/network/status", ServiceHandlers.Network.networkStatus);
 
 /* Data API: Account */
-Server.register("/account/balance", ServiceHandlers.Account.balance);
+Server.register("/account/balance", ServiceHandlers.Account.accountBalance);
+Server.register("/account/coins", ServiceHandlers.Account.accountCoins);
 
 /* Data API: Mempool */
 Server.register("/mempool", ServiceHandlers.Mempool.mempool);

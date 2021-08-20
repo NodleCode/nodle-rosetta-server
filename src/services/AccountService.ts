@@ -23,10 +23,9 @@ import { ApiPromise } from "@polkadot/api";
  * returns AccountBalanceResponse
  * */
 
-export const balance = async (
+export const accountBalance = async (
   params: Params<AccountBalanceRequest>
 ): Promise<AccountBalanceResponse> => {
-  console.log(params)
   const { accountBalanceRequest } = params;
   const { address } = accountBalanceRequest.account_identifier;
   const { index, hash } = accountBalanceRequest.block_identifier || {
@@ -62,6 +61,6 @@ export const balance = async (
   return new AccountBalanceResponse(validBlock, [validAmount]);
 };
 
-export const coins = async () => {
+export const accountCoins = async () => {
   throwError(ERROR_NOT_IMPLEMENTED);
 };
