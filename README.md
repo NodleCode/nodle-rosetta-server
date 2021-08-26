@@ -17,7 +17,7 @@ npm run run:server
 ## Rosetta-cli
 from './rosetta-cli' run
 ```
-./rosetta-cli "command" -configuration-file ./config.json
+./rosetta-cli "command" --configuration-file ./config.json
 ```
 Where 'command' is one of rosetta-cli available commands:
 * check:construction
