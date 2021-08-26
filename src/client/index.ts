@@ -292,17 +292,14 @@ export class ConstructionDeriveResponse {
 
 export class ConstructionParseResponse {
   operations: Operation[];
-  signers?: string[];
   account_identifier_signers?: AccountIdentifier[];
   metadata?: Metadata;
   constructor(
     operations: Operation[],
-    signers?: string[],
     account_identifier_signers?: AccountIdentifier[],
     metadata?: Metadata
   ) {
     this.operations = operations;
-    this.signers = signers;
     this.account_identifier_signers = account_identifier_signers;
     this.metadata = metadata;
   }

@@ -27,10 +27,7 @@ import { Extrinsic, Address } from "@polkadot/types/interfaces";
 import BN from "bn.js";
 import { decode, getTxHash, UnsignedTransaction } from "@substrate/txwrapper";
 import { u8aToHex, hexToU8a, u8aConcat } from "@polkadot/util";
-import {
-  signatureVerify,
-  decodeAddress
-} from "@polkadot/util-crypto";
+import { signatureVerify, decodeAddress } from "@polkadot/util-crypto";
 import { EXTRINSIC_VERSION } from "@polkadot/types/extrinsic/v4/Extrinsic";
 import { ERROR_BROADCAST_TRANSACTION, throwError } from "../utils/error-types";
 import { publicKeyToAddress } from "../utils/crypto";
@@ -367,7 +364,7 @@ export const constructionParse = async (
   const currency = getNetworkCurrencyFromRequest(constructionParseRequest);
 
   let value: any;
-  let sourceAccountAddress: string | Address;
+  let sourceAccountAddress: string;
   let destAccountAddress: string | any;
 
   // Parse transaction
@@ -382,7 +379,7 @@ export const constructionParse = async (
     );
 
     const transactionJSON: Extrinsic = polkaTx.toHuman() as any;
-    sourceAccountAddress = transactionJSON.signer;
+    sourceAccountAddress = transactionJSON.signer.toString();
     destAccountAddress = transactionJSON.method.args[0];
     value = polkaTx.method.args[1].toString();
   } else {
@@ -407,7 +404,8 @@ export const constructionParse = async (
     }
 
     sourceAccountAddress = txInfo.address;
-    destAccountAddress = args.dest;
+    destAccountAddress =
+      (args.dest as any).Address20 || (args.dest as any).Id || args.dest;
     value = args.value;
   }
 
@@ -415,13 +413,13 @@ export const constructionParse = async (
   if (!destAccountAddress || typeof value === "undefined") {
     throw new Error("Extrinsic is missing dest and value arguments");
   }
-
+  
   // Deconstruct transaction into operations
   const operations = [
     Operation.constructFromObject({
       operation_identifier: new OperationIdentifier(0),
       type: "Transfer",
-      account: new AccountIdentifier(sourceAccountAddress as string),
+      account: new AccountIdentifier(sourceAccountAddress),
       amount: new Amount(new BN(value).neg().toString(), currency),
     }),
     Operation.constructFromObject({
@@ -432,17 +430,13 @@ export const constructionParse = async (
     }),
   ];
 
-  // Build list of signers, just one
-  const signers = signed ? [sourceAccountAddress] : [];
-
   // Create response
-  const response = new ConstructionParseResponse(
-    operations,
-    signers as string[]
-  );
-  response.account_identifier_signers = signers.map(
-    (signer) => new AccountIdentifier(signer as string)
-  );
+  const response = new ConstructionParseResponse(operations);
+  if (signed) {
+    response.account_identifier_signers = [
+      new AccountIdentifier(sourceAccountAddress),
+    ];
+  }
   return response;
 };
 
