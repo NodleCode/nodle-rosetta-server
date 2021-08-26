@@ -1,0 +1,11 @@
+[
+  {
+    "account_identifier": {
+      "address":"4mvedcXEAY9xEoEfdCDHviBJqgVQxW9DRwvs7yPsV1HtWU9k"
+    },
+    "currency": {
+      "symbol": "NODL",
+      "decimals": 12
+    }
+  }
+]
