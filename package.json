@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "run:server": "npm exec -- ts-node -r ./src/index.ts"
+    "run:server": "ts-node ./src/index.ts"
   },
   "repository": {
     "type": "git",

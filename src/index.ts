@@ -6,7 +6,7 @@ import { OpenApiConfig } from "types";
 /* Create a server configuration */
 const Server = new RosettaServer({
   URL_PORT: process.env.ROSETTA_PORT || 8080,
-  URL_PATH: process.env.ROSETTA_HOST || "localhost",
+  URL_PATH: process.env.ROSETTA_HOST || "0.0.0.0",
 } as OpenApiConfig);
 
 /* Construction API */
