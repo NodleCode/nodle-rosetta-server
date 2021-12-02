@@ -2,8 +2,6 @@
 
 ## Install
 
-* copy `.npmrc.example` to `.npmrc` and replace `TOKEN` with correct Github Token
-* copy `.env.example` to `.env`
 * run `npm i`
 
 ## Run server
@@ -17,7 +15,7 @@ npm run run:server
 ## Run using Docker
 
 ```
-docker build --build-arg GITHUB_TOKEN=YOURTOKEN -t nodle-rosetta .
+docker build -t nodle-rosetta .
 docker run -p 8080:8080 -e NODE_ADDRESS=ws://3.217.156.114:9944 nodle-rosetta
 ```
 
@@ -46,4 +44,3 @@ To broadcast a transaction, make POST requests to following endpoints:
   * resulting signature pass to signatures[0].hex_bytes (without 0х)
   * execute 'construction/combine'
 4. construction/submit - submit signed transaction from 'construction/combine'
-

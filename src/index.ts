@@ -1,4 +1,4 @@
-import { Server as RosettaServer } from "@consideritdone/rosetta-typescript-sdk";
+import { Server as RosettaServer } from "@nodle/rosetta-typescript-sdk";
 import * as ServiceHandlers from "./services";
 import { OpenApiConfig } from "types";
 

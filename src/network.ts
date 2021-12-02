@@ -1,10 +1,10 @@
-import { Client } from "@consideritdone/rosetta-typescript-sdk";
+import { Client } from "@nodle/rosetta-typescript-sdk";
 export const networkIdentifier = new Client.NetworkIdentifier(
   "Rosetta",
   "Testnet"
 );
 
-import * as RosettaSDK from "@consideritdone/rosetta-typescript-sdk";
+import * as RosettaSDK from "@nodle/rosetta-typescript-sdk";
 import fs from "fs";
 import { ApiPromise, WsProvider } from "@polkadot/api";
 

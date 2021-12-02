@@ -1,1 +1,1 @@
-export * from "@consideritdone/rosetta-typescript-sdk/dist/types"; // TODO: think about it
+export * from "@nodle/rosetta-typescript-sdk/dist/types"; // TODO: think about it
